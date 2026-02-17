@@ -23,6 +23,10 @@ alignPoleH=pcb_max_z+10;
 alignPoleD=8;
 alignPoleCl=0.4; //diff between pole and hole
 
+centerPinD=3;
+centerPinHole=centerPinD+0.2;
+centerPinL=25;
+
 $fn=60;
 
 module pcbBorder(pcb,cl) {
@@ -73,6 +77,11 @@ module topPusher(z) {
             cylinder(h=alignPoleH+5,d=alignPoleD+alignPoleCl);
         }
         
+        //center pin holes
+        for (cp=pcb_center_pins_xy){
+            centerPin(cp[0],cp[1],3-botHolderPCBtoR75-r75HoldLength,centerPinD+clearancePcbTop,centerPinL+5);
+        }
+        
     }
 
 }
@@ -83,7 +92,11 @@ module botHolder() {
         translate([(pcb_min_x+pcb_max_x)/2,(pcb_min_y+pcb_max_y)/2,botHolderAbovePCB1])linear_extrude(h=botHolderAbovePCB2+0.1,scale=1.1)translate([-(pcb_min_x+pcb_max_x)/2,-(pcb_min_y+pcb_max_y)/2,0])pcbBorder(pcb,clearancePcbEdge);
         translate([0,0,-botHolderPCBtoR75])linear_extrude(h=botHolderAbovePCB1+botHolderPCBtoR75+0.1)pcbBorder(pcb,clearancePcbEdge);
         // TP holes
-        for (pt = pcb_testpoints_xy)translate([pt[0],pt[1],-r75HoldLength-botHolderPCBtoR75-0.1])cylinder(h=r75HoldLength+0.2,d=r75HoleDia);
+        for (pt = pcb_testpoints_xy)translate([pt[0],pt[1],-r75HoldLength-botHolderPCBtoR75-0.1])cylinder(h=r75HoldLength+0.2,d=r75HoleDia);        
+        //center pin holes
+        for (cp=pcb_center_pins_xy){
+            centerPin(cp[0],cp[1],3-botHolderPCBtoR75-r75HoldLength,centerPinHole,centerPinL);
+        }
     }
     // align pins
     translate([alignPole1X,alignPole1Y,botHolderAbovePCB1+botHolderAbovePCB2-0.1]){
@@ -151,16 +164,16 @@ if(false){
     }
 } else {
 
-//pcb
-color("Red", 1)render()import(pcb);
-//top
-//color("Blue",1)render()topPusher(0);
-//bottom
-botHolder();
-//TPs
-//pogoSetFromTestpoints();
-//center pins
-for (cp=pcb_center_pins_xy){
-    centerPin(cp[0],cp[1],-20,3,25);
-}
+    //pcb
+    color("Red", 1)render()import(pcb);
+    //top
+    color("Blue",1)render()topPusher(0);
+    //bottom
+    botHolder();
+    //TPs
+    pogoSetFromTestpoints();
+    //center pins
+    for (cp=pcb_center_pins_xy){
+        centerPin(cp[0],cp[1],3-botHolderPCBtoR75-r75HoldLength,centerPinD,centerPinL);
+    }
 }
