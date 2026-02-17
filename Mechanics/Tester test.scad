@@ -8,6 +8,11 @@ clearancePcbEdge=0.5;
 holderY=10;
 holderX=20;
 
+pcb_center_real_x=(pcb_min_x+pcb_max_x)/2;
+pcb_center_real_y=(pcb_min_y+pcb_max_y)/2;
+pcb_size_x=pcb_max_x-pcb_min_x;
+pcb_size_y=pcb_max_y-pcb_min_y;
+
 botHolderAbovePCB2=4; //with 45 degree angle
 botHolderAbovePCB1=pcbTicknes+0.4; //including PCB
 botHolderPCBtoR75=2.5+3;
@@ -16,9 +21,9 @@ r75HoleDia=1.32+0.2;
 r75HoldLength=10;
 
 alignPole1X=pcb_min_x-holderX/2;
-alignPole1Y=pcb_min_y+(pcb_max_y-pcb_min_y)/2-holderX;
+alignPole1Y=pcb_center_real_y-holderX;
 alignPole2X=pcb_max_x+holderX/2;
-alignPole2Y=pcb_min_y+(pcb_max_y-pcb_min_y)/2+holderX;
+alignPole2Y=pcb_center_real_y+holderX;
 alignPoleH=pcb_max_z+10;
 alignPoleD=8;
 alignPoleCl=0.4; //diff between pole and hole
@@ -28,6 +33,10 @@ centerPinHole=centerPinD+0.2;
 centerPinL=25;
 
 $fn=60;
+
+module pcbCenteredFrame() {
+    translate([-pcb_center_real_x,-pcb_center_real_y,0]) children();
+}
 
 module pcbBorder(pcb,cl) {
     minkowski() {
@@ -40,7 +49,7 @@ module topkeepout(pcb) {
     minkowski() {
         projection(cut=false)intersection(){
             import(pcb);
-            translate([pcb_min_x-5,pcb_min_y-5,pcbTicknes+0.1])cube([pcb_max_x-pcb_min_x+10,pcb_max_y-pcb_min_y+10,pcb_max_z-pcb_min_z+10]);
+            translate([pcb_min_x-5,pcb_min_y-5,pcbTicknes+0.1])cube([pcb_size_x+10,pcb_size_y+10,pcb_max_z-pcb_min_z+10]);
         }
         circle(clearancePcbTop);
     }
@@ -50,7 +59,7 @@ module botkeepout(pcb,z) {
     minkowski() {
         projection(cut=false)intersection(){
             import(pcb);
-            translate([pcb_min_x-5,pcb_min_y-5,z-(pcb_max_z-pcb_min_z+10)])cube([pcb_max_x-pcb_min_x+10,pcb_max_y-pcb_min_y+10,pcb_max_z-pcb_min_z+10]);
+            translate([pcb_min_x-5,pcb_min_y-5,z-(pcb_max_z-pcb_min_z+10)])cube([pcb_size_x+10,pcb_size_y+10,pcb_max_z-pcb_min_z+10]);
         }
         circle(clearancePcbBot);
     }
@@ -61,12 +70,12 @@ module topPusher(z) {
     topTick=20;
     difference() {
         // greate main block
-        translate([pcb_min_x-holderX,pcb_min_y-holderY,pcbTicknes])cube([pcb_max_x-pcb_min_x+holderX*2,pcb_max_y-pcb_min_y+holderY*2,pcb_max_z+clPcbTop+topTick]);
+        translate([pcb_min_x-holderX,pcb_min_y-holderY,pcbTicknes])cube([pcb_size_x+holderX*2,pcb_size_y+holderY*2,pcb_max_z+clPcbTop+topTick]);
         // substract PCB keepout
         linear_extrude(h=pcb_max_z+clPcbTop)topkeepout(pcb);
         // remove botHolder space
         difference() {
-            translate([pcb_min_x-holderX-1,pcb_min_y-holderY-1,0])cube([pcb_max_x-pcb_min_x+holderX*2+2,pcb_max_y-pcb_min_y+holderY*2+2,botHolderAbovePCB2+botHolderAbovePCB1]);
+            translate([pcb_min_x-holderX-1,pcb_min_y-holderY-1,0])cube([pcb_size_x+holderX*2+2,pcb_size_y+holderY*2+2,botHolderAbovePCB2+botHolderAbovePCB1]);
             translate([0,0,-0.1])linear_extrude(height=botHolderAbovePCB2+botHolderAbovePCB1+0.2)pcbBorder(pcb,0.01);
         }
         // align holes
@@ -88,8 +97,8 @@ module topPusher(z) {
 
 module botHolder() {
     difference(){// greate main block
-        translate([pcb_min_x-holderX,pcb_min_y-holderY,-(botHolderPCBtoR75+r75HoldLength)])cube([pcb_max_x-pcb_min_x+holderX*2,pcb_max_y-pcb_min_y+holderY*2,botHolderAbovePCB2+botHolderAbovePCB1+botHolderPCBtoR75+r75HoldLength]);
-        translate([(pcb_min_x+pcb_max_x)/2,(pcb_min_y+pcb_max_y)/2,botHolderAbovePCB1])linear_extrude(h=botHolderAbovePCB2+0.1,scale=1.1)translate([-(pcb_min_x+pcb_max_x)/2,-(pcb_min_y+pcb_max_y)/2,0])pcbBorder(pcb,clearancePcbEdge);
+        translate([pcb_min_x-holderX,pcb_min_y-holderY,-(botHolderPCBtoR75+r75HoldLength)])cube([pcb_size_x+holderX*2,pcb_size_y+holderY*2,botHolderAbovePCB2+botHolderAbovePCB1+botHolderPCBtoR75+r75HoldLength]);
+        translate([pcb_center_real_x,pcb_center_real_y,botHolderAbovePCB1])linear_extrude(h=botHolderAbovePCB2+0.1,scale=1.1)translate([-pcb_center_real_x,-pcb_center_real_y,0])pcbBorder(pcb,clearancePcbEdge);
         translate([0,0,-botHolderPCBtoR75])linear_extrude(h=botHolderAbovePCB1+botHolderPCBtoR75+0.1)pcbBorder(pcb,clearancePcbEdge);
         // TP holes
         for (pt = pcb_testpoints_xy)translate([pt[0],pt[1],-r75HoldLength-botHolderPCBtoR75-0.1])cylinder(h=r75HoldLength+0.2,d=r75HoleDia);        
@@ -149,31 +158,34 @@ module pogoSetFromTestpoints(z = -botHolderPCBtoR75) {
 
 
 if(false){
-    render()difference(){
-        union(){
-            //pcb
-            color("Red", 1)render()import(pcb);
-            //top
-            color("Blue",1)render()topPusher(0);
-            //bottom
-            render()botHolder();
-            //TPs
-            pogoSetFromTestpoints();
+    pcbCenteredFrame() {
+        render()difference(){
+            union(){
+                //pcb
+                color("Red", 1)render()import(pcb);
+                //top
+                color("Blue",1)render()topPusher(0);
+                //bottom
+                render()botHolder();
+                //TPs
+                pogoSetFromTestpoints();
+            }
+            translate([-20+1000+pcb_center_real_x,0,0])cube([2000,2000,2000],center=true);
         }
-        translate([-20+1000+pcb_min_x+(pcb_max_x-pcb_min_x)/2,0,0])cube([2000,2000,2000],center=true);
     }
 } else {
-
-    //pcb
-    color("Red", 1)render()import(pcb);
-    //top
-    color("Blue",1)render()topPusher(0);
-    //bottom
-    botHolder();
-    //TPs
-    pogoSetFromTestpoints();
-    //center pins
-    for (cp=pcb_center_pins_xy){
-        centerPin(cp[0],cp[1],3-botHolderPCBtoR75-r75HoldLength,centerPinD,centerPinL);
+    pcbCenteredFrame() {
+        //pcb
+        color("Red", 1)render()import(pcb);
+        //top
+        //color("Blue",1)render()topPusher(0);
+        //bottom
+        botHolder();
+        //TPs
+        pogoSetFromTestpoints();
+        //center pins
+        for (cp=pcb_center_pins_xy){
+            centerPin(cp[0],cp[1],3-botHolderPCBtoR75-r75HoldLength,centerPinD,centerPinL);
+        }
     }
 }
