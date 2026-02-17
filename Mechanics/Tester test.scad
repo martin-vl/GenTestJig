@@ -1,5 +1,7 @@
 include <params.scad>;
 
+handle = "parts/GH-304-HM.stl";
+
 pcb = "pcb/24-clocks.stl";
 pcbTicknes = 1.6;
 clearancePcbTop=1;
@@ -155,7 +157,7 @@ module pogoSetFromTestpoints(z = -botHolderPCBtoR75) {
     }
 }
 
-
+translate([0,0,40])rotate([0,-90,180])translate([0,-44.4,-71.4/2])import(handle);
 
 if(false){
     pcbCenteredFrame() {
@@ -178,7 +180,7 @@ if(false){
         //pcb
         color("Red", 1)render()import(pcb);
         //top
-        //color("Blue",1)render()topPusher(0);
+        color("Blue",1)render()topPusher(0);
         //bottom
         botHolder();
         //TPs
